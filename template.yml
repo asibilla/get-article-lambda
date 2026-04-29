@@ -20,4 +20,4 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints: 
-          - src/index.ts
+          - src/app.ts

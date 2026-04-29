@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "sam build",
-    "invoke:local": "yarn build && sam local invoke MyTypeScriptFunction -e ./mocks/event.json",
+    "invoke:local": "yarn build && sam local invoke GetArticle -e ./mocks/event.json",
     "generate:mock": "sam local generate-event apigateway aws-proxy --method GET --path /get-article > ./mocks/event.json"
   }
 }
