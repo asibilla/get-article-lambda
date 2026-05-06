@@ -4,16 +4,10 @@ Resources:
     Properties:
       CodeUri: .
       Handler: app.lambdaHandler
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Architectures:
         - x86_64
-      Events:
-        HelloWorld:
-          Type: Api
-          Properties:
-            Path: /get-article
-            Method: get
-    Metadata: # This section is REQUIRED to trigger the TypeScript build
+    Metadata:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
@@ -21,3 +15,10 @@ Resources:
         Sourcemap: true
         EntryPoints: 
           - src/app.ts
+
+  GetArticleLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${GetArticle}"
+      RetentionInDays: 1
+  
