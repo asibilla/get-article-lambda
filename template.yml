@@ -1,6 +1,12 @@
 Resources:
+  GetArticleLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${GetArticle}"
+      RetentionInDays: 1
   GetArticle:
     Type: AWS::Serverless::Function
+    DependsOn: GetArticleLogGroup
     Properties:
       CodeUri: .
       Handler: app.lambdaHandler
@@ -15,10 +21,4 @@ Resources:
         Sourcemap: true
         EntryPoints: 
           - src/app.ts
-
-  GetArticleLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/aws/lambda/${GetArticle}"
-      RetentionInDays: 1
   
