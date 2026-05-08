@@ -1,0 +1,22 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 24
+    commands:
+      - yarn global add aws-sam-cli
+  pre_build:
+    commands:
+      - yarn install --frozen-lockfile
+  build:
+    commands:
+      - sam build
+      - sam package
+        --s3-bucket $ARTIFACT_BUCKET
+        --s3-prefix $CODEBUILD_RESOLVED_SOURCE_VERSION
+        --output-template-file packaged.yaml
+        --region $AWS_DEFAULT_REGION
+artifacts:
+  files:
+    - packaged.yaml
+    - template.yaml
