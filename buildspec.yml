@@ -2,11 +2,16 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      nodejs: 24
+      nodejs: 20
     commands:
       - pip install aws-sam-cli
+      - corepack enable
+      - corepack prepare yarn@4.10.3 --activate
   pre_build:
     commands:
+      - node --version
+      - npm --version
+      - yarn --version
       - yarn install --frozen-lockfile
   build:
     commands:
