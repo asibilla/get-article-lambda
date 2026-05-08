@@ -4,7 +4,7 @@ phases:
     runtime-versions:
       nodejs: 24
     commands:
-      - yarn global add aws-sam-cli
+      - pip install aws-sam-cli
   pre_build:
     commands:
       - yarn install --frozen-lockfile
