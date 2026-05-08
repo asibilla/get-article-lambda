@@ -4,6 +4,7 @@ Resources:
     Properties:
       LogGroupName: !Sub "/aws/lambda/${GetArticle}"
       RetentionInDays: 1
+
   GetArticle:
     Type: AWS::Serverless::Function
     DependsOn: GetArticleLogGroup
