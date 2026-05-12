@@ -11,7 +11,9 @@ Globals:
 Resources:
   GetArticle:
     Type: AWS::Serverless::Function
+    DependsOn: GetArticleLogGroup
     Properties:
+      FunctionName: get-article
       CodeUri: .
       Handler: app.lambdaHandler
       Events:
@@ -32,6 +34,6 @@ Resources:
   GetArticleLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${GetArticle}"
+      LogGroupName: "/aws/lambda/get-article"
       RetentionInDays: 1
   
