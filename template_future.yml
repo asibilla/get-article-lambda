@@ -15,6 +15,7 @@ Parameters:
 Resources:
   GetArticle:
     Type: AWS::Serverless::Function
+    DependsOn: GetArticleLogGroup
     Properties:
       FunctionName: !Ref FunctionName
       CodeUri: .
@@ -33,4 +34,10 @@ Resources:
         Sourcemap: true
         EntryPoints: 
           - src/app.ts
+
+  GetArticleLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${FunctionName}"
+      RetentionInDays: 1
   
