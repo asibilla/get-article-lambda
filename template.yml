@@ -38,6 +38,6 @@ Resources:
   GetArticleLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/FunctionName"
+      LogGroupName: !Sub "/aws/lambda/${FunctionName}"
       RetentionInDays: 1
   
