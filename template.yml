@@ -3,17 +3,21 @@ Description: SAM app with Typescript and log retention
 
 Globals:
   Function:
-    Runtime: nodejs20.x
+    Runtime: nodejs22.x
     Architectures:
         - x86_64
 
+Parameters:
+  FunctionName:
+    Type: String
+    Default: andysibillacom-get-article
 
 Resources:
   GetArticle:
     Type: AWS::Serverless::Function
     DependsOn: GetArticleLogGroup
     Properties:
-      FunctionName: get-article
+      FunctionName: !Ref FunctionName
       CodeUri: .
       Handler: app.lambdaHandler
       Events:
@@ -25,7 +29,7 @@ Resources:
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
-        Minify: true
+        Minify: false
         Target: "es2020"
         Sourcemap: true
         EntryPoints: 
@@ -34,6 +38,6 @@ Resources:
   GetArticleLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: "/aws/lambda/get-article"
+      LogGroupName: !Sub "/aws/lambda/FunctionName"
       RetentionInDays: 1
   
