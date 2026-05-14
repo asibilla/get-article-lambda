@@ -23,7 +23,7 @@ Resources:
         ApiEvent:
           Type: Api
           Properties:
-            Path: get-article
+            Path: /get-article
             Method: get
     Metadata:
       BuildMethod: esbuild
