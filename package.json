@@ -3,6 +3,7 @@
   "packageManager": "yarn@4.10.3",
   "devDependencies": {
     "@types/aws-lambda": "^8.10.161",
+    "@types/node": "^25.8.0",
     "esbuild": "^0.28.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.1"
@@ -10,6 +11,7 @@
   "scripts": {
     "build": "sam build",
     "invoke:local": "yarn build && sam local invoke GetArticle -e ./mocks/event.json",
+    "invoke:local:authorizer": "yarn build && sam local invoke AuthorizerFunction -e ./mocks/authorizerEvent.json --env-vars ./mocks/env.json",
     "generate:mock": "sam local generate-event apigateway aws-proxy --method GET --path /get-article > ./mocks/event.json"
   }
 }

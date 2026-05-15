@@ -8,15 +8,54 @@ Globals:
         - x86_64
 
 Parameters:
-  FunctionName:
+  GetArticleFunctionName:
     Type: String
     Default: andysibillacom-get-article
+  AuthorizerFunctionName:
+    Type: String
+    Default: andysibillacom-authorizer
+  CloudFrontSecretKeyPath:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cloudfront/secret-key
 
 Resources:
+  ArticleApi: 
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: CloudFrontSecretAuthorizer
+        Authorizers:
+          CloudFrontSecretAuthorizer:
+            FunctionArn: !GetAtt AuthorizerFunction.Arn
+            Identity:
+              Headers:
+                - X-Origin-Secret
+            AuthorizerPayloadFormatVersion: "1.0"
+            ResultTtlInSeconds: 300
+
+  AuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Ref AuthorizerFunctionName
+      CodeUri: .
+      Handler: authorizer.lambdaHandler
+      Environment:
+        Variables:
+          CLOUDFRONT_SECRET: !Ref CloudFrontSecretKeyPath
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints: 
+          - src/authorizer.ts
+
   GetArticle:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Ref FunctionName
+      FunctionName: !Ref GetArticleFunctionName
       CodeUri: .
       Handler: app.lambdaHandler
       Events:
@@ -25,6 +64,7 @@ Resources:
           Properties:
             Path: /api/get-article
             Method: get
+            RestApiId: !Ref ArticleApi
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
