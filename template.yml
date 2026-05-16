@@ -17,12 +17,22 @@ Parameters:
   CloudFrontSecretKeyPath:
     Type: AWS::SSM::Parameter::Value<String>
     Default: /cloudfront/secret-key
+  DomainName:
+    Type: String
+    Default: api.andysibilla.com
+  AcmCertificateArn:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /andysibillacom/acm-certificate-arn
 
 Resources:
   ArticleApi: 
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
+      Domain:
+        DomainName: !Ref DomainName
+        CertificateArn: !Ref AcmCertificateArn
+        EndpointConfiguration: REGIONAL
       Auth:
         DefaultAuthorizer: CloudFrontSecretAuthorizer
         Authorizers:
@@ -73,4 +83,11 @@ Resources:
         Sourcemap: true
         EntryPoints: 
           - src/app.ts
+
+Outputs:
+  ApiUrl:
+    Value: !Sub "https://${DomainName}/Prod"
+  ApiGatewayDomainName:
+    Value: !GetAtt ArticleApi.DomainName
+  
   
