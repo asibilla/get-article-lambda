@@ -22,7 +22,9 @@ const buildPolicy = (
 export const lambdaHandler = async (
     event: APIGatewayRequestAuthorizerEvent
 ): Promise<APIGatewayAuthorizerResult> => {
-    const secretHeader = event.headers?.['X-Origin-Secret'];
+    // API Gateway lowercases all header names on REQUEST authorizer events
+    const secretHeader =
+        event.headers?.['x-origin-secret'] ?? event.headers?.['X-Origin-Secret'];
     const isAuthorized = CLOUDFRONT_SECRET.length > 0 && secretHeader === CLOUDFRONT_SECRET;
     return buildPolicy(isAuthorized ? 'Allow' : 'Deny', event.methodArn);
 }
