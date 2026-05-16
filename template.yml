@@ -38,6 +38,7 @@ Resources:
         Authorizers:
           CloudFrontSecretAuthorizer:
             FunctionArn: !GetAtt AuthorizerFunction.Arn
+            FunctionPayloadType: REQUEST
             Identity:
               Headers:
                 - X-Origin-Secret
