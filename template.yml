@@ -86,8 +86,10 @@ Resources:
 
 Outputs:
   ApiUrl:
+    Description: Invoke URL using the custom domain
     Value: !Sub "https://${DomainName}/Prod"
   ApiGatewayDomainName:
-    Value: !GetAtt ArticleApi.DomainName
-  
+    Description: Regional execute-api hostname for this REST API (no custom domain)
+    Value: !Sub "${ArticleApi}.execute-api.${AWS::Region}.amazonaws.com"
+
   
