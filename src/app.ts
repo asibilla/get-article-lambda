@@ -4,9 +4,9 @@ import { docClient, getTableName } from './util/dynamodb';
 
 export const lambdaHandler = async (event: APIGatewayEvent) => {
     try {
-        const id = event.queryStringParameters?.id ?? '';
-        const type = event.queryStringParameters?.type ?? '';
-        const queryByType = !id;
+        const articleId = event.queryStringParameters?.id ?? '';
+        const articleType = event.queryStringParameters?.type ?? '';
+        const queryByType = !articleId;
         const tableName = getTableName();
         if (!tableName) {
             throw new Error('ARTICLE_TABLE_NAME is not set');
@@ -15,32 +15,47 @@ export const lambdaHandler = async (event: APIGatewayEvent) => {
         const params = {
             TableName: tableName,
             ...(queryByType ? { IndexName: 'article-type' } : {}),
-            KeyConditionExpression: `#ind = :v`,
+            KeyConditionExpression: `#k = :v`,
             ExpressionAttributeNames: {
-                "#ind": queryByType ? 'article-type' : 'article-id'
+                "#k": queryByType ? 'article-type' : 'article-id'
             },
             ExpressionAttributeValues: {
-                ':v': queryByType ? type : id
+                ':v': queryByType ? articleType : articleId
             }
         };
     
         const result = await docClient.send(new QueryCommand(params));
-        console.log(result);
+        if (result && result.Items) {
+            return {
+                body: JSON.stringify({
+                    response: result.Items
+                }),
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                statusCode: 200,
+            };
+        }
 
-    
+        return {
+            body: JSON.stringify({
+                response: new Error(`Could not find results for ${articleId} ${articleType}`)
+            }),
+            headers: {
+                "Content-Type": "application/json"
+            },
+            statusCode: 404,
+        }
     } catch (error) {
-        console.log('an error occurred', error);
+        return {
+            body: JSON.stringify({
+                response: error,
+            }),
+            headers: {
+                "Content-Type": "application/json",
+            },
+            statusCode: 500
+        };
     }
-    const response = {
-        statusCode: 200,
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            message: "Hello World",
-        }),
-    };
-
-    return response;
 }
 
