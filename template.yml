@@ -23,6 +23,9 @@ Parameters:
   AcmCertificateArn:
     Type: AWS::SSM::Parameter::Value<String>
     Default: /andysibillacom/acm-certificate-arn
+  ArticleTableName:
+    Type: String
+    Default: andysibillacom-content
 
 Resources:
   ArticleApi: 
@@ -69,6 +72,9 @@ Resources:
       FunctionName: !Ref GetArticleFunctionName
       CodeUri: .
       Handler: app.lambdaHandler
+      Environment:
+        Variables:
+          ARTICLE_TABLE_NAME: !Ref ArticleTableName
       Events:
         ApiEvent:
           Type: Api

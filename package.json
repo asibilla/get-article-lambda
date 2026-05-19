@@ -10,8 +10,12 @@
   },
   "scripts": {
     "build": "sam build",
-    "invoke:local": "yarn build && sam local invoke GetArticle -e ./mocks/event.json",
-    "invoke:local:authorizer": "yarn build && sam local invoke AuthorizerFunction -e ./mocks/authorizerEvent.json --env-vars ./mocks/env.json",
+    "invoke:local": "sam local invoke GetArticle -e ./mocks/event.json --env-vars ./mocks/env.json",
+    "invoke:local:authorizer": "sam local invoke AuthorizerFunction -e ./mocks/authorizerEvent.json --env-vars ./mocks/env.json",
     "generate:mock": "sam local generate-event apigateway aws-proxy --method GET --path /get-article > ./mocks/event.json"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1048.0",
+    "@aws-sdk/lib-dynamodb": "^3.1048.0"
   }
 }
