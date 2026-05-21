@@ -26,6 +26,9 @@ Parameters:
   ArticleTableName:
     Type: String
     Default: andysibillacom-content
+  AllowedOrigins:
+    Type: String
+    Default: https://andysibilla.com,https://www.andysibilla.com,http://localhost:3000
 
 Resources:
   ArticleApi: 
@@ -75,6 +78,7 @@ Resources:
       Environment:
         Variables:
           ARTICLE_TABLE_NAME: !Ref ArticleTableName
+          ALLOWED_ORIGINS: !Ref AllowedOrigins
       Policies:
         - Statement:
             - Effect: Allow
@@ -91,6 +95,14 @@ Resources:
             Path: /api/get-article
             Method: get
             RestApiId: !Ref ArticleApi
+        OptionsEvent:
+          Type: Api
+          Properties:
+            Path: /api/get-article
+            Method: options
+            RestApiId: !Ref ArticleApi
+            Auth:
+              Authorizer: NONE
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
