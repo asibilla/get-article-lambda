@@ -180,7 +180,6 @@ Resources:
   ContentEditorApiPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: !Sub ${AWS::StackName}-content-editor-api
       Description: Invoke IAM-protected article write endpoints
       PolicyDocument:
         Version: '2012-10-17'
