@@ -11,6 +11,9 @@ Parameters:
   GetArticleFunctionName:
     Type: String
     Default: andysibillacom-get-article
+  WriteArticleFunctionName:
+    Type: String
+    Default: andysibillacom-write-article
   AuthorizerFunctionName:
     Type: String
     Default: andysibillacom-authorizer
@@ -112,6 +115,83 @@ Resources:
         EntryPoints: 
           - src/app.ts
 
+  WriteArticle:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Ref WriteArticleFunctionName
+      CodeUri: .
+      Handler: write-app.lambdaHandler
+      Environment:
+        Variables:
+          ARTICLE_TABLE_NAME: !Ref ArticleTableName
+          ALLOWED_ORIGINS: !Ref AllowedOrigins
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - dynamodb:DescribeTable
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ArticleTableName}
+      Events:
+        PutEvent:
+          Type: Api
+          Properties:
+            Path: /api/write-article
+            Method: put
+            RestApiId: !Ref ArticleApi
+            Auth:
+              Authorizer: AWS_IAM
+        PatchEvent:
+          Type: Api
+          Properties:
+            Path: /api/write-article
+            Method: patch
+            RestApiId: !Ref ArticleApi
+            Auth:
+              Authorizer: AWS_IAM
+        DeleteEvent:
+          Type: Api
+          Properties:
+            Path: /api/write-article
+            Method: delete
+            RestApiId: !Ref ArticleApi
+            Auth:
+              Authorizer: AWS_IAM
+        OptionsEvent:
+          Type: Api
+          Properties:
+            Path: /api/write-article
+            Method: options
+            RestApiId: !Ref ArticleApi
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - src/write-app.ts
+
+  ContentEditorApiPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-content-editor-api
+      Description: Invoke IAM-protected article write endpoints
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: execute-api:Invoke
+            Resource:
+              - !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ArticleApi}/Prod/PUT/api/write-article
+              - !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ArticleApi}/Prod/PATCH/api/write-article
+              - !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ArticleApi}/Prod/DELETE/api/write-article
+
 Outputs:
   ApiUrl:
     Description: Invoke URL using the custom domain
@@ -119,5 +199,9 @@ Outputs:
   ApiGatewayDomainName:
     Description: Regional execute-api hostname for this REST API (no custom domain)
     Value: !Sub "${ArticleApi}.execute-api.${AWS::Region}.amazonaws.com"
-
-  
+  WriteArticleUrl:
+    Description: IAM-protected article write endpoint (custom domain)
+    Value: !Sub "https://${DomainName}/Prod/api/write-article"
+  ContentEditorApiPolicyArn:
+    Description: Attach to IAM roles/users that should invoke the write API
+    Value: !Ref ContentEditorApiPolicy

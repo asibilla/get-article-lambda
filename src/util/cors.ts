@@ -23,7 +23,14 @@ export const getCorsHeaders = (event: APIGatewayEvent): Record<string, string> =
     };
 };
 
-export const handleOptions = (event: APIGatewayEvent): APIGatewayProxyResult => {
+const IAM_AUTH_HEADERS =
+    'Content-Type,Authorization,X-Amz-Date,X-Amz-Security-Token,X-Amz-Content-Sha256';
+
+export const handleOptions = (
+    event: APIGatewayEvent,
+    methods = 'GET,OPTIONS',
+    allowHeaders = 'Content-Type',
+): APIGatewayProxyResult => {
     const cors = getCorsHeaders(event);
     if (!cors['Access-Control-Allow-Origin']) {
         return { statusCode: 403, body: JSON.stringify({ error: new Error('Invalid Origin') }) };
@@ -32,10 +39,13 @@ export const handleOptions = (event: APIGatewayEvent): APIGatewayProxyResult => 
         statusCode: 204,
         headers: {
             ...cors,
-            'Access-Control-Allow-Methods': 'GET,OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Methods': methods,
+            'Access-Control-Allow-Headers': allowHeaders,
             'Access-Control-Max-Age': '86400',
         },
         body: '',
     };
 };
+
+export const handleWriteOptions = (event: APIGatewayEvent): APIGatewayProxyResult =>
+    handleOptions(event, 'PUT,PATCH,DELETE,OPTIONS', IAM_AUTH_HEADERS);
