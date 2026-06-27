@@ -53,33 +53,30 @@ export const lambdaHandler = async (event: APIGatewayEvent) => {
         }
     
         const result = await docClient.send(new QueryCommand(params));
+        const items = result.Items ?? [];
 
-        if (queryByType) {
-            const nextCursor = result.LastEvaluatedKey
-                ? encodeCursor(result.LastEvaluatedKey)
-                : undefined;
-
+        if (!queryByType && !items.length) {
             return jsonResponse(
                 event,
-                200,
-                {
-                    response: {
-                        items: result.Items ?? [],
-                        ...(nextCursor ? { nextCursor } : {}),
-                    },
-                },
+                404,
+                { response: { error: new Error(`Could not find results for id=${articleId} type=${articleType}`) } },
                 { cacheControl: true },
             );
         }
 
-        if (result?.Items?.length) {
-            return jsonResponse(event, 200, { response: result.Items }, { cacheControl: true });
-        }
+        const nextCursor = queryByType && result.LastEvaluatedKey
+            ? encodeCursor(result.LastEvaluatedKey)
+            : undefined;
 
         return jsonResponse(
             event,
-            404,
-            { response: { error: new Error(`Could not find results for id=${articleId} type=${articleType}`) } },
+            200,
+            {
+                response: {
+                    items,
+                    ...(nextCursor ? { nextCursor } : {}),
+                },
+            },
             { cacheControl: true },
         );
     } catch (error) {
