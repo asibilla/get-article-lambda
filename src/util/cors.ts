@@ -5,10 +5,13 @@ const getAllowedOrigins = (): string[] => {
     return raw.split(',').map((o) => o.trim()).filter(Boolean);
 };
 
-const getRequestOrigin = (event: APIGatewayEvent): string | undefined => {
+export const getRequestOrigin = (event: APIGatewayEvent): string | undefined => {
     const headers = event.headers ?? {};
     return headers.origin ?? headers.Origin;
 };
+
+const isLocalhostOrigin = (origin: string): boolean =>
+    /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
 
 export const getCorsHeaders = (event: APIGatewayEvent): Record<string, string> => {
     const origin = getRequestOrigin(event);
@@ -21,6 +24,21 @@ export const getCorsHeaders = (event: APIGatewayEvent): Record<string, string> =
         'Access-Control-Allow-Origin': origin,
         Vary: 'Origin',
     };
+};
+
+export const getCacheControlHeaders = (event: APIGatewayEvent): Record<string, string> => {
+    const origin = getRequestOrigin(event);
+    const allowed = getAllowedOrigins();
+
+    if (!origin || !allowed.includes(origin)) {
+        return {};
+    }
+
+    if (isLocalhostOrigin(origin)) {
+        return { 'Cache-Control': 'private, no-cache, no-store, must-revalidate' };
+    }
+
+    return { 'Cache-Control': 'public, max-age=900' };
 };
 
 const IAM_AUTH_HEADERS =

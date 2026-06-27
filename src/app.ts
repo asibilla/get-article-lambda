@@ -4,6 +4,23 @@ import { handleOptions } from './util/cors';
 import { docClient, getTableName } from './util/dynamodb';
 import { jsonResponse } from './util/response';
 
+const PAGE_SIZE = 20;
+
+const encodeCursor = (key: Record<string, unknown>) =>
+    Buffer.from(JSON.stringify(key)).toString('base64url');
+
+const decodeCursor = (cursor: string): Record<string, unknown> => {
+    try {
+        const parsed: unknown = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            throw new Error('Invalid cursor');
+        }
+        return parsed as Record<string, unknown>;
+    } catch {
+        throw new Error('Invalid cursor');
+    }
+};
+
 export const lambdaHandler = async (event: APIGatewayEvent) => {
     if (event.httpMethod === 'OPTIONS') {
         return handleOptions(event);
@@ -12,15 +29,16 @@ export const lambdaHandler = async (event: APIGatewayEvent) => {
     try {
         const articleId = event.queryStringParameters?.id ?? '';
         const articleType = event.queryStringParameters?.type ?? '';
+        const cursor = event.queryStringParameters?.cursor;
         const queryByType = !articleId;
         const tableName = getTableName();
         if (!tableName) {
             throw new Error('ARTICLE_TABLE_NAME is not set');
         }
 
-        const params = {
+        const params: ConstructorParameters<typeof QueryCommand>[0] = {
             TableName: tableName,
-            ...(queryByType ? { IndexName: 'article-type' } : {}),
+            ...(queryByType ? { IndexName: 'article-type', Limit: PAGE_SIZE } : {}),
             KeyConditionExpression: `#k = :v`,
             ExpressionAttributeNames: {
                 "#k": queryByType ? 'article-type' : 'article-id'
@@ -29,18 +47,44 @@ export const lambdaHandler = async (event: APIGatewayEvent) => {
                 ':v': queryByType ? articleType : articleId
             }
         };
+
+        if (queryByType && cursor) {
+            params.ExclusiveStartKey = decodeCursor(cursor);
+        }
     
         const result = await docClient.send(new QueryCommand(params));
+
+        if (queryByType) {
+            const nextCursor = result.LastEvaluatedKey
+                ? encodeCursor(result.LastEvaluatedKey)
+                : undefined;
+
+            return jsonResponse(
+                event,
+                200,
+                {
+                    response: {
+                        items: result.Items ?? [],
+                        ...(nextCursor ? { nextCursor } : {}),
+                    },
+                },
+                { cacheControl: true },
+            );
+        }
+
         if (result?.Items?.length) {
-            return jsonResponse(event, 200, { response: result.Items });
+            return jsonResponse(event, 200, { response: result.Items }, { cacheControl: true });
         }
 
         return jsonResponse(
             event,
             404,
             { response: { error: new Error(`Could not find results for id=${articleId} type=${articleType}`) } },
+            { cacheControl: true },
         );
     } catch (error) {
-        return jsonResponse(event, 500, { response: { error: error } });
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        const statusCode = message === 'Invalid cursor' ? 400 : 500;
+        return jsonResponse(event, statusCode, { response: { error: message } });
     }
 }
