@@ -38,10 +38,19 @@ export const lambdaHandler = async (event: APIGatewayEvent) => {
 
         const params: ConstructorParameters<typeof QueryCommand>[0] = {
             TableName: tableName,
-            ...(queryByType ? { IndexName: 'article-type', Limit: PAGE_SIZE } : {}),
+            ...(queryByType ? {
+                IndexName: 'article-type',
+                Limit: PAGE_SIZE,
+                ScanIndexForward: false,
+                ProjectionExpression: '#articleId, #k, #date, displayTitle',
+            } : {}),
             KeyConditionExpression: `#k = :v`,
             ExpressionAttributeNames: {
-                "#k": queryByType ? 'article-type' : 'article-id'
+                '#k': queryByType ? 'article-type' : 'article-id',
+                ...(queryByType ? {
+                    '#articleId': 'article-id',
+                    '#date': 'date',
+                } : {}),
             },
             ExpressionAttributeValues: {
                 ':v': queryByType ? articleType : articleId
